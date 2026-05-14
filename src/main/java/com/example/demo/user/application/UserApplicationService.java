@@ -24,3 +24,4 @@ public class UserApplicationService {
 		return genderMap;
 	}
 }
+	
