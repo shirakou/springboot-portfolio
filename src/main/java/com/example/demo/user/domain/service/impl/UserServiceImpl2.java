@@ -1,9 +1,10 @@
 package com.example.demo.user.domain.service.impl;
 
-import java.util.List;
+import java.util.Optional;
 
+import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.user.domain.UserService;
 import com.example.demo.user.domain.model.MUser;
 import com.example.demo.user.repository.UserMapper;
+import com.example.demo.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,32 +20,39 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserServiceImpl implements UserService {
+@Primary
+public class UserServiceImpl2 implements UserService {
 
     private final UserMapper mapper;
 
+    private final UserRepository repository;
+
     @Override
     public void signup(MUser user) {
+        // 既登録チェック
+        boolean isExists = repository.existsById(user.getUserId());
+        if (isExists) {
+            throw new DuplicateKeyException("既に存在するユーザーです");
+        }
+
         user.setDepartmentId(1); // 部署
         user.setRole("ROLE_GENERAL"); // ロール
-        int count = mapper.insertOne(user);
-        log.info("登録件数={}件", count);
+        repository.save(user);
     }
 
     /** ユーザー取得 */
     @Override
     public Page<MUser> getUsers(MUser user, Pageable pageable) {
         // ユーザー一覧取得
-        List<MUser> userList = mapper.findMany(user, pageable);
-        // ユーザー一覧の件数取得
-        int count = mapper.count(user);
-        // Pageのインスタンス生成
-        return new PageImpl<MUser>(userList, pageable, count);
+        Page<MUser> userList = repository.findAll(pageable);
+        return userList;
     }
 
     @Override
     public MUser getUserOne(String userId) {
-        return mapper.findOne(userId);
+        Optional<MUser> option = repository.findById(userId);
+        MUser user = option.orElse(null);
+        return user;
     }
 
     @Override
@@ -55,9 +64,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void deleteUserOne(String userId) {
-        int count = mapper.deleteOne(userId);
-        log.info("削除件数={}", count);
-        // わざと例外を発生させる
-        // int i = 1 / 0;
+        repository.deleteById(userId);
     }
 }

@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.demo.user.application.UserApplicationService;
+import com.example.demo.user.domain.UserService;
 import com.example.demo.user.domain.model.MUser;
-import com.example.demo.user.domain.service.UserService;
 import com.example.demo.user.form.SignupForm;
 
 import lombok.RequiredArgsConstructor;
