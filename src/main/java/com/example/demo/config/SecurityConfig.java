@@ -5,6 +5,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -23,6 +27,13 @@ permitAll()
 					.requestMatchers("/error").permitAll()
 					.requestMatchers("/h2-console/**").permitAll()
 					.anyRequest().authenticated()
+			).formLogin(login -> login
+					.loginPage("/login")
+					.usernameParameter("userId")
+					.passwordParameter("password")
+					.defaultSuccessUrl("/user/list")
+					.failureUrl("/login?error")
+					.permitAll()
 			);
 		//CSRFを、無効(一時的)
 		http.csrf(csrf -> csrf.disable());
@@ -30,5 +41,23 @@ permitAll()
 		http.headers(headers -> headers.frameOptions(option -> option.disable()));
 		
 		return http.build();
+	}
+	
+	@Bean
+	UserDetailsService userDetailsService() {
+		//一般ユーザー
+		UserDetails user = User.withDefaultPasswordEncoder()
+				.username("user")
+				.password("password")
+				.roles("GENERAL")
+				.build();
+		//Adminnistrator
+		UserDetails admin = User.withDefaultPasswordEncoder()
+				.username("admin")
+				.password("password")
+				.roles("GENERAL","ADMIN")
+				.build();
+		
+		return new InMemoryUserDetailsManager(user,admin);
 	}
 }
