@@ -8,6 +8,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceImpl2 implements UserService {
 
     private final UserRepository repository;
+    
+    private final PasswordEncoder encoder;
 
     @Override
     public void signup(MUser user) {
@@ -36,6 +39,10 @@ public class UserServiceImpl2 implements UserService {
 
         user.setDepartmentId(1); // 部署
         user.setRole("ROLE_GENERAL"); // ロール
+        
+        //パウワードのハッシュ化
+        String rawPassword = user.getPassword();
+        user.setPassword(encoder.encode(rawPassword));
         repository.save(user);
     }
 
@@ -64,7 +71,9 @@ public class UserServiceImpl2 implements UserService {
     @Transactional
     @Override
     public void updateUserOne(String userId, String password, String userName) {
-        int count = repository.updateUser(userId, password, userName);
+    	//パスワードのハッシュ化
+    	String hashPassword = encoder.encode(password);
+        int count = repository.updateUser(userId, hashPassword, userName);
         log.info("更新件数={}", count);
     }
 

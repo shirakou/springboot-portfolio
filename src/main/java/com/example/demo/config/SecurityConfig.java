@@ -8,12 +8,20 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+	
+	@Bean
+	PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+	
 	//セキュリティの対象外を設定
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -34,16 +42,15 @@ permitAll()
 					.defaultSuccessUrl("/user/list")
 					.failureUrl("/login?error")
 					.permitAll()
-			);
-		//CSRFを、無効(一時的)
-		http.csrf(csrf -> csrf.disable());
-		//ヘッダーを設定
-		http.headers(headers -> headers.frameOptions(option -> option.disable()));
+			).logout(logout -> logout
+					.logoutUrl("/logout")
+					.logoutSuccessUrl("/login?logout")
+					);
 		
 		return http.build();
 	}
 	
-	@Bean
+	//@Bean
 	UserDetailsService userDetailsService() {
 		//一般ユーザー
 		UserDetails user = User.withDefaultPasswordEncoder()
